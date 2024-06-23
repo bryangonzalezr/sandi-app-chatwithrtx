@@ -11,6 +11,6 @@ app = FastAPI()
 def recibir_respuesta(pregunta: str):
     def event_generator():
         response = rtx_api.send_message(pregunta)
-        return json.dumps(response)
+        yield json.dumps(response)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
