@@ -4,8 +4,14 @@ import string
 import psutil
 import json
 import re
+import os
+import dotenv
 
-port = 4443
+dotenv.load_dotenv()
+
+
+HOST = os.getenv("RTXHost", "")
+port = os.getenv("RTXPort", 0)
 
 def find_chat_with_rtx_port():
     global port
@@ -16,7 +22,7 @@ def find_chat_with_rtx_port():
                 process = psutil.Process(host.pid)
                 if "ChatWithRTX" in process.exe():
                     test_port = host.laddr.port
-                    url = f"http://127.0.0.1:{test_port}/queue/join"
+                    url = f"http://{HOST}:{test_port}/queue/join"
                     response = requests.post(url, data="", timeout=0.05)
                     if response.status_code == 422:
                         port = test_port
@@ -34,12 +40,12 @@ def join_queue(session_hash, fn_index, port, chatdata):
     }
     json_string = json.dumps(python_object)
 
-    url = f"http://127.0.0.1:{port}/queue/join"
+    url = f"http://{HOST}:{port}/queue/join"
     response = requests.post(url, data=json_string)
     # print("Join Queue Response:", response.json())
 
 def listen_for_updates(session_hash, port):
-    url = f"http://127.0.0.1:{port}/queue/data?session_hash={session_hash}"
+    url = f"http://{HOST}:{port}/queue/data?session_hash={session_hash}"
 
     response = requests.get(url, stream=True)
     for line in response.iter_lines():
