@@ -3,6 +3,7 @@ import random
 import string
 import psutil
 import json
+import re
 
 port = 4443
 
@@ -45,12 +46,10 @@ def listen_for_updates(session_hash, port):
         if line:
             try:
                 data = json.loads(line[5:])
-                message_data = data['output']['data'][0][0][1]
-                if data['msg'] == 'process_generating':
-                    yield {"message": message_data}
-                elif data['msg'] == 'process_completed':
-                    yield {"message": message_data}
-                    break
+                if data['msg'] == 'process_completed':
+                    message = data['output']['data'][0][0][1]
+                    clean_message = re.sub(r'<br>Reference files:<br>.*', '', message)
+                    return json.loads(clean_message)
             except Exception as e:
                 pass
 
