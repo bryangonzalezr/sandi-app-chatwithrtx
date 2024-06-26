@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import rtx_api as rtx_api
-from models.userData import UserData
-from models.types import Types
+# from models.userData import UserData
+# from models.types import Types
 import httpx
 
 
