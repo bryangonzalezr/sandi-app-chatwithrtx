@@ -32,11 +32,21 @@ def recibir_respuesta(pregunta: str):
             yield json.dumps({"response": response['response']})
 
         elif response['type'] == 'Recipe':
-            data = json.dumps(response)
             r = httpx.post("http://localhost:8080/receta/api/", json=response)
             r.raise_for_status()
             yield json.dumps(r.json())
-        
+
+        elif response['type'] == 'Daily Menu':
+            r = httpx.post("http://localhost:8080/daymenu/generate/", json=response, follow_redirects=True)
+            r.raise_for_status()
+            yield json.dumps(r.json())
+
+        elif response['type'] == 'General Menu':
+            x = 1
+            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": x}, json=response, follow_redirects=True)
+            r.raise_for_status()
+            yield json.dumps(r.json())
+
         else:
             yield json.dumps({"error": "Invalid query type"})
 
