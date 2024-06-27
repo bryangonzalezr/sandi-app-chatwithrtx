@@ -25,8 +25,9 @@ def recibir_respuesta(pregunta: str):
 
         response = rtx_api.send_message(pregunta)
 
-        if response is None:
+        if response is None or 'error' in response:
             response = {'type': ""}
+
         else:
             response = dict(response)
 
