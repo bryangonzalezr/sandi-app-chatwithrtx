@@ -23,8 +23,12 @@ def recibir_respuesta(pregunta: str):
 
     def event_generator():
 
-        response = rtx_api.send_message(file_content + pregunta)
-        response = dict(response)
+        response = rtx_api.send_message(pregunta)
+
+        if response is None:
+            response = {'type': ""}
+        else:
+            response = dict(response)
 
         if response['type'] == "General Query":
             yield json.dumps(response)
@@ -39,8 +43,13 @@ def recibir_respuesta(pregunta: str):
             r.raise_for_status()
             yield json.dumps(r.json())
 
-        elif response['type'] == 'General Menu':
-            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": response['timespan']}, json={"query": response['query']}, follow_redirects=True, timeout=60.0)
+        elif response['type'] == 'Weekly Menu':
+            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": 7}, json=response, follow_redirects=True, timeout=60.0)
+            r.raise_for_status()
+            yield json.dumps(r.json())
+        
+        elif response['type'] == 'Monthly Menu':
+            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": 28}, json=response, follow_redirects=True, timeout=60.0)
             r.raise_for_status()
             yield json.dumps(r.json())
 
