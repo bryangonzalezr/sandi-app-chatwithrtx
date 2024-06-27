@@ -23,7 +23,7 @@ def recibir_respuesta(pregunta: str):
 
     def event_generator():
 
-        response = rtx_api.send_message(file_content + pregunta)
+        response = rtx_api.send_message(pregunta)
         response = dict(response)
 
         if response['type'] == "General Query":
@@ -49,7 +49,7 @@ def recibir_respuesta(pregunta: str):
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-def read_file_content(filepath: str) -> str:
+""" def read_file_content(filepath: str) -> str:
     try:
         with open(filepath, 'r') as file:
             content = file.read()
@@ -69,7 +69,7 @@ def startup_event():
 
 @app.get("/file-content/")
 def get_file_content():
-    return {"file_content": file_content}
+    return {"file_content": file_content} """
 
 if __name__ == "__main__":
     import uvicorn
