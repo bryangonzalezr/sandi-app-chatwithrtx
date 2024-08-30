@@ -5,10 +5,17 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import rtx_api as rtx_api
+from models.userData import UserData
+from models.types import Types
 import httpx
-
+from fastapi import FastAPI
+import deepl
 
 app = FastAPI()
+
+#translator
+auth_key = "a7578d8e-684a-49ae-8df7-986236244665:fx"
+translator = deepl.Translator(auth_key)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,44 +25,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: Union[bool, None] = None
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: Item):
+    return {"item_name": item.name, "item_id": item_id}
+
+@app.get("/libros/{id}")
+def mostrar_libro(id: int):
+    return {"data": id}
+
+@app.get("/translate_esp/{text}")
+def translate_text_esp(text: str):
+    # Add your translation logic here
+    translated_text = translator.translate_text(text, source_lang="EN", target_lang="ES")
+    return {"original_text": text, "translated_text": translated_text}
+
+@app.get("/translate_eng/{text}")
+def translate_text_eng(text: str):
+    # Add your translation logic here
+    translated_text = translator.translate_text(text, source_lang="ES", target_lang="EN-US")
+    return {"original_text": text, "translated_text": translated_text}
+
 @app.post("/chatwithrtx")
 def recibir_respuesta(pregunta: str):
 
     def event_generator():
 
-        response = rtx_api.send_message(pregunta)
+        translated_question = translator.translate_text(pregunta, source_lang="ES", target_lang="EN-US").text
+        response = rtx_api.send_message(translated_question)
 
         if response is None or 'error' in response:
             response = {'type': ""}
 
         else:
-            response = dict(response)
+            response = {'query': response}
 
-        if response['type'] == "General Query":
-            yield json.dumps(response)
+            translated_response = translator.translate_text(response.get('query', ''), source_lang="EN", target_lang="ES").text
+            response['query'] = translated_response
 
-        elif response['type'] == 'Recipe':
-            r = httpx.post("http://localhost:8080/receta/api/", json=response)
-            r.raise_for_status()
-            yield json.dumps(r.json())
-
-        elif response['type'] == 'Daily Menu':
-            r = httpx.post("http://localhost:8080/daymenu/generate/", json=response, follow_redirects=True)
-            r.raise_for_status()
-            yield json.dumps(r.json())
-
-        elif response['type'] == 'Weekly Menu':
-            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": 7}, json=response, follow_redirects=True, timeout=60.0)
-            r.raise_for_status()
-            yield json.dumps(r.json())
-        
-        elif response['type'] == 'Monthly Menu':
-            r = httpx.post("http://localhost:8080/menu/generate/", params={"timespan": 28}, json=response, follow_redirects=True, timeout=60.0)
-            r.raise_for_status()
-            yield json.dumps(r.json())
-
-        else:
-            yield json.dumps({"error": "Invalid query type"})
+        yield json.dumps(response)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

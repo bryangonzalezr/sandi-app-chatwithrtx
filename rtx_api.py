@@ -55,7 +55,7 @@ def listen_for_updates(session_hash, port):
                 if data['msg'] == 'process_completed':
                     message = data['output']['data'][0][0][1]
                     clean_message = re.sub(r'<br>Reference files:<br>.*', '', message)
-                    return json.loads(clean_message)
+                    return clean_message
             except Exception as e:
                 pass
 
