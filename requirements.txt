@@ -111,7 +111,7 @@ python-apt
 python-dateutil
 python-dotenv
 python-jose
-python-multipart=
+python-multipart
 pytz
 PyYAML
 pyzmq
