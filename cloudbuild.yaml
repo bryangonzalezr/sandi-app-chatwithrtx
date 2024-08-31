@@ -34,9 +34,4 @@ images:
   - 'gcr.io/$PROJECT_ID/mi-aplicacion:${SHORT_SHA}'
   - 'gcr.io/$PROJECT_ID/mi-aplicacion:latest'
 
-# Artifacts para almacenar en Google Cloud Storage (opcional)
-artifacts:
-  objects:
-    location: 'gs://mi-bucket-de-artifacts/'
-    paths: 
-      - 'path/to/my/artifact/**'
+
