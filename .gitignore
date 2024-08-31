@@ -1,4 +1,5 @@
 # Ignore pycache directory
 __pycache__/
-
+myenv/
+checkpoint-830/
 .env
