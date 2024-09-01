@@ -9,6 +9,7 @@ from app.aux_fun.translator import translate_text_from_to
 import gdown
 import zipfile
 
+
 load_dotenv()
 
 datos = "app/aux_fun/data/cocina.json"
@@ -117,8 +118,14 @@ def clasificador_pregunta(prompt: str):
         translated_prompt = translate_text_from_to(prompt, source_lang="ES", target_lang="EN-US")
         #chatrtx
         response = send_message(translated_prompt)
-        #traducir a español
-        translated_response = translate_text_from_to(response, source_lang="EN-US", target_lang="ES")
+        print(response)
+        if(response == None):
+            return {
+                "query": prompt,
+                "response": "Hubo un error al intentar comunicarse con el servidor de RTX",
+                "type": predicted_label,
+                    }
+        translated_response = translate_text_from_to(response, source_lang="EN", target_lang="ES")
         #responder
         result = {
         "query": prompt,

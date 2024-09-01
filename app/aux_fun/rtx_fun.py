@@ -6,15 +6,19 @@ import json
 import re
 import os
 import dotenv
+from app.config import Config
+
 
 dotenv.load_dotenv()
 
 
-HOST = os.getenv("RTXHost", "")
+
 port = os.getenv("RTXPort", 0)
 
 def find_chat_with_rtx_port():
     global port
+    HOST = Config.get_ngrok_url()
+
     connections = psutil.net_connections(kind='inet')
     for host in connections:
         try:
@@ -32,6 +36,8 @@ def find_chat_with_rtx_port():
 
 def join_queue(session_hash, fn_index, port, chatdata):
     #fn_indexes are some gradio generated indexes from rag/trt/ui/user_interface.py
+    HOST = Config.get_ngrok_url()
+
     python_object = {
         "data": chatdata,
         "event_data": None,
@@ -40,12 +46,14 @@ def join_queue(session_hash, fn_index, port, chatdata):
     }
     json_string = json.dumps(python_object)
 
-    url = f"http://{HOST}:{port}/queue/join"
+    url = f"http://{HOST}/queue/join"
     response = requests.post(url, data=json_string)
     # print("Join Queue Response:", response.json())
 
 def listen_for_updates(session_hash, port):
-    url = f"http://{HOST}:{port}/queue/data?session_hash={session_hash}"
+    HOST = Config.get_ngrok_url()
+
+    url = f"http://{HOST}/queue/data?session_hash={session_hash}"
 
     response = requests.get(url, stream=True)
     for line in response.iter_lines():
