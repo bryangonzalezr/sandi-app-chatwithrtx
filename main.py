@@ -4,7 +4,7 @@ import uvicorn
 from app.routes import api_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.aux_fun.modelo import model_check_existence
 
 app = FastAPI()
 
@@ -20,11 +20,11 @@ load_dotenv()
 #     allow_headers=["*"],
 # )
 
-#en caso de que necesitemos hacer algo que requiera ejecutarse al inicio
-# @app.on_event("startup")
-# async def startup_event():
-#     # Initialize database connection
-#     init_db()
+# en caso de que necesitemos hacer algo que requiera ejecutarse al inicio
+@app.on_event("startup")
+async def startup_event():
+    # Initialize database connection
+    print(model_check_existence())
 
 app.include_router(api_router)
 

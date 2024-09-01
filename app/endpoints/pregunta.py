@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.aux.modelo import clasificador_pregunta
+from app.aux_fun.modelo import clasificador_pregunta
 import json
 from pydantic import BaseModel
 

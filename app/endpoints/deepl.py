@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.aux.translator import translate_text_from_to
+from app.aux_fun.translator import translate_text_from_to
 
 router = APIRouter()
 

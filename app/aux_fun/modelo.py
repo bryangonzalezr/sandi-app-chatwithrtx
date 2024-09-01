@@ -4,23 +4,49 @@ from difflib import get_close_matches
 import json
 from dotenv import load_dotenv
 import os
-from app.aux.rtx_fun import send_message
-from app.aux.translator import translate_text_from_to
+from app.aux_fun.rtx_fun import send_message
+from app.aux_fun.translator import translate_text_from_to
+import gdown
+import zipfile
 
 load_dotenv()
 
-datos = os.getenv("DATA_CUOSINE")
+datos = "app/aux_fun/data/cocina.json"
 with open(datos, "r") as file:
     data = json.load(file)
 
 ingredientes = data["ingredientes"]
 recetas = data["recetas"]
-model_path = os.getenv("MODEL_PACIENTE")
-tokenizer = AutoTokenizer.from_pretrained('gpt2')
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
+model_path = "app/aux_fun/data/model/checkpoint-830"
 
-# Asegúrate de que el tokenizador tenga un token de relleno
-tokenizer.pad_token = tokenizer.eos_token
+def model_check_existence():
+    route = 'app/aux_fun/data/model/checkpoint-830'
+    if os.path.exists(route):
+        return True
+    else:
+        return False
+    
+def load_model():
+
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    if model_path is None:
+        raise ValueError("No se ha definido la variable de entorno MODEL_PACIENTE")
+    if model_check_existence() is False:
+        # Descargar el modelo de google drive
+        google_drive_url = "https://drive.google.com/uc?id=1ZuvEGZrzvU9uO3cFWsqNWM-AVWj9BQ42"
+        #download model
+        gdown.download(google_drive_url, 'app/aux_fun/data/model/model.zip', quiet=False)
+        #unzip downloaded file
+        with zipfile.ZipFile('app/aux_fun/data/model/model.zip', 'r') as zip_ref:
+            zip_ref.extractall('app/aux_fun/data/model')
+
+    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+
+    # Asegúrate de que el tokenizador tenga un token de relleno
+    tokenizer.pad_token = tokenizer.eos_token
+    return tokenizer, model
+
+tokenizer, model = load_model()
 
 def identificar_ingredientes(prompt):
     palabras = prompt.lower().split()
@@ -106,3 +132,4 @@ def clasificador_pregunta(prompt: str):
     # Convertir a JSON
     result_json = json.dumps(result, indent=4)
     return result_json
+
