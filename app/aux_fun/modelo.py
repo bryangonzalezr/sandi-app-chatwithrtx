@@ -14,6 +14,9 @@ import requests
 
 load_dotenv()
 
+api_url = os.getenv("SANDI_API_HOST")
+api_port = os.getenv("SANDI_API_PORT")
+
 datos = "app/aux_fun/data/cocina.json"
 with open(datos, "r") as file:
     data = json.load(file)
@@ -81,7 +84,7 @@ def extraer_tiempo(prompt):
     return 1
 
 def obtener_token(email, password):
-    url = "http://localhost:8080/api/login"
+    url = "http://"+api_url+":"+api_port+"/api/login"
     payload = {
         "email": email,
         "password": password
@@ -96,7 +99,7 @@ def obtener_token(email, password):
         return None
     
 def obtener_receta(token, query):
-    url = "http://localhost:8080/api/receta/generar"
+    url = "http://"+api_url+":"+api_port+"/api/receta/generar"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
@@ -140,12 +143,12 @@ def obtener_receta(token, query):
 def generar_menu(token, query, time):
     # Verificamos si el valor de time es 1 para consumir el endpoint
     if time == 1:
-        url = "http://localhost:8080/api/menu-diario/generar"
+        url = "http://"+api_url+":"+api_port+"/api/menu-diario/generar"
         body = {
             "query": query
         }
     elif time > 1:
-        url = "http://localhost:8080/api/menu/generar"
+        url = "http://"+api_url+":"+api_port+"/api/menu/generar"
         body = {
             "query": query,
             "timespan": time
