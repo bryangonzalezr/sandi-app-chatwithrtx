@@ -43,5 +43,25 @@
         "nuez de macadamia", "leche de coco", "nata montada", "queso halloumi", "queso de oveja", "bocadillo", 
         "almendras tostadas"
     ],
-    "recetas": ["pizza"]
+    "recetas": [
+    "pizza", "spaghetti carbonara", "ensalada césar", "pollo al curry", "lasagna", "lasaña", "tacos de carne", "tacos", "ceviche", "sushi", "paella", "ratatouille", 
+    "ramen", "chili con carne", "bistec a la parrilla", "guacamole", "hamburguesas", "pollo a la parrilla", "ensalada de pasta", "fajitas", "burritos", 
+    "pollo teriyaki", "quiche lorraine", "curry de garbanzos", "pasta al pesto", "pollo al ajillo", "cazuela", "pollo tikka masala", "tortilla española", 
+    "gazpacho", "pollo con mole", "fajitas de pollo", "risotto", "pollo al limón", "salmón a la plancha", "albondigas", "sopa de cebolla", "bacalao a la vizcaína", 
+    "ternera asada", "costillas de cerdo", "bistec encebollado", "caldo de pollo", "pollo asado", "pollo con champiñones", "curry de lentejas", 
+    "carne mechada", "pollo en salsa", "pollo empanizado", "pollo al horno", "pollo relleno", "costillas BBQ",
+    "pato a la naranja", "polenta", "goulash", "empanadas", "nachos", "pollo al ajillo", "pollo frito", "pollo agridulce", "ensalada griega", "pollo a la naranja", 
+    "ensalada caprese", "ensalada niçoise", "mac and cheese", "ravioli", "cannelloni", "osso buco", "steak tartare", "pavlova", "crema catalana", "crème brûlée", 
+    "croquetas", "moussaka", "huevos rancheros", "tacos al pastor", "enchiladas", "tamales", "pollo con almendras", "pollo tikka", "ensalada de quinoa", "pad thai", 
+    "tom kha gai", "pho", "bibimbap", "bulgogi", "sopa de miso", "gyoza", "teriyaki de salmón", "empanadas de queso", "fideuà", "arroz con leche", 
+    "arroz con pollo", "sopa de mariscos", "cordero al horno", "bacalao dorado", "baba ganoush", "tabbouleh", "kebabs", "falafel", "shakshuka",
+    "pollo a la cazadora", "pollo en mole poblano", "fettuccine alfredo", "pasta primavera", "tiramisu", "flan de huevo", "crepes", "soufflé de chocolate", 
+    "panqueques", "churros", "tarta de manzana", "tarta de queso", "pastel de chocolate", "brownies", "gâteau de crêpes", "croque monsieur", "croque madame", 
+    "chili vegetariano", "gnocchi", "pollo kiev", "pollo con ciruelas", "carrillera de cerdo", "coq au vin", "fajitas de camarones", "tamales de elote", 
+    "pescado a la veracruzana", "pescado al ajillo", "pimientos rellenos", "rabo de toro", "berenjenas rellenas", "pimientos de piquillo rellenos", "bacalao a bras", 
+    "arroz a la cubana", "callos a la madrileña", "tortilla de camarones", "langosta thermidor", "escargots", "fondue de queso", "raclette", "risotto de setas", 
+    "salmón al horno", "solomillo wellington", "cordero a la menta", "ossobuco alla milanese", "tostadas de ceviche", "cochinita pibil", "ensalada de coleslaw", 
+    "frijoles charros", "ensalada Waldorf", "sandwich cubano", "sandwich", "fideos con salsa", "arroz con carne", "fideos con atún", "arroz con pollo", "puré con pollo",
+    "carne con papas", "porotos con rienda", "porotos", "zapallo italiano", "fideos con huevo", "sopa de champiñones", "sopa"
+  ]
 }

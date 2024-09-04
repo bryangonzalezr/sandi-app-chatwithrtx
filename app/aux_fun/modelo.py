@@ -8,6 +8,8 @@ from app.aux_fun.rtx_fun import send_message
 from app.aux_fun.translator import translate_text_from_to
 import gdown
 import zipfile
+import re
+import requests
 
 
 load_dotenv()
@@ -49,6 +51,163 @@ def load_model():
 
 tokenizer, model = load_model()
 
+def extraer_tiempo(prompt):
+    # Diccionario para convertir palabras a días
+    periodos = {
+        "semanal": 7,
+        "semana": 7,
+        "quincena": 15,
+        "quincenal": 15,
+        "mensual": 30,
+        "mes": 30,
+        "hoy": 1,
+        "diario": 1,
+        "día": 1,
+        "dias": 1,  # Considerar faltas ortográficas
+        "dia": 1    # Considerar faltas ortográficas
+    }
+
+    # Buscar patrones numéricos como "5 días" o "10 dias"
+    match = re.search(r'(\d+)\s*(días|dias|dia)', prompt)
+    if match:
+        return int(match.group(1))
+
+    # Buscar palabras que representan periodos
+    for palabra, dias in periodos.items():
+        if palabra in prompt.lower():
+            return dias
+
+    # Si no se encuentra nada, retornar un valor predeterminado, por ejemplo, 1 día
+    return 1
+
+def obtener_token(email, password):
+    url = "http://localhost:8080/api/login"
+    payload = {
+        "email": email,
+        "password": password
+    }
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()  # Levanta una excepción para códigos de respuesta no exitosos
+        data = response.json()
+        return data['data']['token']
+    except requests.exceptions.RequestException as e:
+        print(f"Error al obtener el token: {e}")
+        return None
+    
+def obtener_receta(token, query):
+    url = "http://localhost:8080/api/receta/generar"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "query": query
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=body)
+        response.raise_for_status()  # Levanta una excepción para códigos de respuesta no exitosos
+        data = response.json()
+        
+        # Extraer la información requerida
+        recipe = data.get("recipe", {})
+        label = recipe.get("label", "")
+        ingredient_lines = recipe.get("ingredientLines", [])
+        calories = recipe.get("calories", 0)
+        ingredientes = ", ".join(ingredient_lines)
+        instrucciones = send_message(f"Give me instructions for {label} using the following ingredients: {ingredientes}")
+
+        # Traducir los campos
+        label_translated = translate_text_from_to(label, source_lang="EN", target_lang="ES")
+        ingredient_lines_translated = [translate_text_from_to(line, source_lang="EN", target_lang="ES") for line in ingredient_lines]
+        instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
+        
+        # Crear el JSON final con las traducciones
+        translated_result = {
+            "receta": label_translated,
+            "ingredientes": ingredient_lines_translated,
+            "calorias": calories,
+            "instrucciones": instrucciones_traducidas
+        }
+        
+        return translated_result
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error al obtener la receta: {e}")
+        return None
+    
+def generar_menu(token, query, time):
+    # Verificamos si el valor de time es 1 para consumir el endpoint
+    if time == 1:
+        url = "http://localhost:8080/api/menu-diario/generar"
+        body = {
+            "query": query
+        }
+    elif time > 1:
+        url = "http://localhost:8080/api/menu/generar"
+        body = {
+            "query": query,
+            "timespan": time
+        }
+    else:
+        print("Inserta un valor válido")
+        return None
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        # Hacer la solicitud al endpoint
+        response = requests.post(url, headers=headers, json=body)
+        response.raise_for_status()  # Lanzar una excepción si la respuesta tiene un error
+        data = response.json()
+
+        # Procesar los datos para extraer la información relevante
+        if time == 1:
+            recipes = data["recipes"]
+        else:
+            recipes = data["menus"]
+        total_calories = data["total_calories"]
+
+        recetas_traducidas = []
+
+        for receta in recipes:
+            # ingredientes = ", ".join(receta["ingredientLines"])
+            # instrucciones = send_message(f"Give me instructions for {receta['label']} using the following ingredients: {ingredientes}")
+            # print(f"Give me instructions for {receta['label']} using the following ingredients: {ingredientes}")
+
+            # Traducir label, ingredientLines y mealType
+            label_traducido = translate_text_from_to(receta["label"], source_lang="EN", target_lang="ES")
+            ingredient_lines_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in receta["ingredientLines"]]
+            meal_type_traducido = [translate_text_from_to(meal, source_lang="EN", target_lang="ES") for meal in receta["mealType"]]
+            # instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
+            
+            # Agregar la receta traducida con calorías sin traducir
+            receta_traducida = {
+                "receta": label_traducido,
+                "ingredientes": ingredient_lines_traducido,
+                "calorias": receta["calories"], 
+                "tipo": meal_type_traducido
+                # "instrucciones": instrucciones_traducidas
+            }
+            
+            recetas_traducidas.append(receta_traducida)
+
+        # Resultado final con total_calories sin traducir
+        resultado = {
+            "recipes": recetas_traducidas,
+            "total_calories": total_calories 
+        }
+
+        return json.dumps(resultado, indent=4)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error al hacer la solicitud: {e}")
+        return None
+
 def identificar_ingredientes(prompt):
     palabras = prompt.lower().split()
     ingredientes_encontrados = set()
@@ -58,8 +217,7 @@ def identificar_ingredientes(prompt):
         coincidencias = get_close_matches(palabra, ingredientes, n=1, cutoff=0.8)
         if coincidencias:
             ingredientes_encontrados.add(coincidencias[0])
-    
-    return list(ingredientes_encontrados)
+    return ", ".join(ingredientes_encontrados)
 
 def identificar_recetas(prompt):
     palabras = prompt.lower().split()
@@ -70,13 +228,20 @@ def identificar_recetas(prompt):
         coincidencias = get_close_matches(palabra, recetas, n=1, cutoff=0.8)
         if coincidencias:
             recetas_encontradas.add(coincidencias[0])
-    
-    return list(recetas_encontradas)
+    return ", ".join(recetas_encontradas)
 
-
+def texto_query(ingredientes, recetas):
+    if ingredientes == "" and recetas == "":
+        return "Debes ingresar ingredientes y/o recetas"
+    elif ingredientes == "" and recetas != "":
+        return recetas
+    elif ingredientes != "" and recetas == "":
+        return ingredientes
+    elif ingredientes != "" and recetas != "":
+        return f"{recetas} con {ingredientes}"
 
 def clasificador_pregunta(prompt: str):
-
+    token = obtener_token("sandi@test.cl", "sandi.,2024")
     # 3. Tokenizar el prompt
     inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=128)
     # 4. Hacer una predicción
@@ -94,24 +259,33 @@ def clasificador_pregunta(prompt: str):
     }
     predicted_label = label_map_inverse[predicted_class]
 
-    ingredientes_detectados = identificar_ingredientes(prompt)
-    recetas_detectadas = identificar_recetas(prompt)
+    if predicted_label == "solicitud_receta" or predicted_label == "solicitud_menu":
+        ingredientes_detectados = identificar_ingredientes(prompt)
+        recetas_detectadas = identificar_recetas(prompt)
+        resultado = texto_query(ingredientes_detectados, recetas_detectadas)
+        resultado = translate_text_from_to(resultado, source_lang="ES", target_lang="EN-US")
 
     if predicted_label == "solicitud_receta":
-        #conexion con api juandex
+        query = obtener_receta(token, resultado)
         result = {
-        "query": recetas_detectadas,
-        "ingredientes": ingredientes_detectados,
-        "type": predicted_label,
+        "receta": query['receta'],
+        "ingredientes": query['ingredientes'],
+        "calorias": query['calorias'],
+        "instrucciones": query['instrucciones'],
+        "type": predicted_label
     }
     elif predicted_label == "solicitud_menu":
-        #conexion api juandex
+        # Aquí usamos la función extraer_tiempo
+        dias = extraer_tiempo(prompt)
+        query = generar_menu(token, resultado, dias)
+        query = json.loads(query)
         result = {
-        "query": recetas_detectadas,
-        "ingredientes": ingredientes_detectados,
-        "type": predicted_label,
-        "time": 1,
-    }
+            "recetas": query['recipes'],
+            "total_calorias": query['total_calories'],
+            # "instrucciones": query['instrucciones'],
+            "type": predicted_label,
+            "time": dias
+        }
     elif predicted_label == "pregunta_cocina":
         
         #traducir a ingles
@@ -139,4 +313,3 @@ def clasificador_pregunta(prompt: str):
     # Convertir a JSON
     result_json = json.dumps(result, indent=4)
     return result_json
-
