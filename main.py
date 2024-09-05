@@ -11,15 +11,15 @@ app = FastAPI()
 
 load_dotenv()
 
-#cors para despues
-# origins = os.getenv("CORS_ORIGINS").split(",")
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+# cors para despues
+origins = os.getenv("CORS_ORIGINS").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # # en caso de que necesitemos hacer algo que requiera ejecutarse al inicio
 # @app.on_event("startup")
