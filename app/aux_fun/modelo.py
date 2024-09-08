@@ -93,7 +93,7 @@ def obtener_token(email, password):
         response = requests.post(url, json=payload)
         response.raise_for_status()  # Levanta una excepción para códigos de respuesta no exitosos
         data = response.json()
-        return data['data']['token']
+        return data['token']
     except requests.exceptions.RequestException as e:
         print(f"Error al obtener el token: {e}")
         return None

@@ -16,7 +16,6 @@ def pregunta_usuario(
     pregunta: PreguntaUsuario
 ):
     try:
-        print(pregunta)
         respuesta = clasificador_pregunta(pregunta.pregunta)
         return json.loads(respuesta)
     except Exception as e:
