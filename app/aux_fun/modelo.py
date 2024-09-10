@@ -23,10 +23,10 @@ with open(datos, "r") as file:
 
 ingredientes = data["ingredientes"]
 recetas = data["recetas"]
-model_path = "app/aux_fun/data/model/checkpoint-830"
+model_path = os.getenv("MODEL_PATH")
 
 def model_check_existence():
-    route = 'app/aux_fun/data/model/checkpoint-830'
+    route = model_path
     if os.path.exists(route):
         return True
     else:
@@ -34,17 +34,9 @@ def model_check_existence():
     
 def load_model():
 
-    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer = AutoTokenizer.from_pretrained('roberta-base')
     if model_path is None:
         raise ValueError("No se ha definido la variable de entorno MODEL_PACIENTE")
-    if model_check_existence() is False:
-        # Descargar el modelo de google drive
-        google_drive_url = "https://drive.google.com/uc?id=1ZuvEGZrzvU9uO3cFWsqNWM-AVWj9BQ42"
-        #download model
-        gdown.download(google_drive_url, 'app/aux_fun/data/model/model.zip', quiet=False)
-        #unzip downloaded file
-        with zipfile.ZipFile('app/aux_fun/data/model/model.zip', 'r') as zip_ref:
-            zip_ref.extractall('app/aux_fun/data/model')
 
     model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
