@@ -10,13 +10,14 @@ router = APIRouter()
 
 class PreguntaUsuario(BaseModel):
     pregunta: str
+    id_usuario: int
 
 @router.post("/pregunta_usuario")
 def pregunta_usuario(
     pregunta: PreguntaUsuario
 ):
     try:
-        respuesta = clasificador_pregunta(pregunta.pregunta)
+        respuesta = clasificador_pregunta(pregunta.pregunta, pregunta.id_usuario)
         return json.loads(respuesta)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

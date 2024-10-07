@@ -90,14 +90,15 @@ def obtener_token(email, password):
         print(f"Error al obtener el token: {e}")
         return None
     
-def obtener_receta(token, query):
+def obtener_receta(token, query, id_usuario):
     url = "http://"+api_url+":"+api_port+"/api/receta/generar"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
     body = {
-        "query": query
+        "query": query,
+        "user_id": id_usuario
     }
 
     try:
@@ -132,18 +133,20 @@ def obtener_receta(token, query):
         print(f"Error al obtener la receta: {e}")
         return None
     
-def generar_menu(token, query, time):
+def generar_menu(token, query, time, id_usuario):
     # Verificamos si el valor de time es 1 para consumir el endpoint
     if time == 1:
         url = "http://"+api_url+":"+api_port+"/api/menu-diario/generar"
         body = {
-            "query": query
+            "query": query,
+            "user_id": id_usuario
         }
     elif time > 1:
         url = "http://"+api_url+":"+api_port+"/api/menu/generar"
         body = {
             "query": query,
-            "timespan": time
+            "time": str(time),
+            "user_id": id_usuario
         }
     else:
         print("Inserta un valor válido")
@@ -235,7 +238,7 @@ def texto_query(ingredientes, recetas):
     elif ingredientes != "" and recetas != "":
         return f"{recetas} con {ingredientes}"
 
-def clasificador_pregunta(prompt: str):
+def clasificador_pregunta(prompt: str, id_usuario: int):
     token = obtener_token("sandi@test.cl", "sandi.,2024")
     # 3. Tokenizar el prompt
     inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=128)
@@ -261,25 +264,28 @@ def clasificador_pregunta(prompt: str):
         resultado = translate_text_from_to(resultado, source_lang="ES", target_lang="EN-US")
 
     if predicted_label == "solicitud_receta":
-        query = obtener_receta(token, resultado)
+        query = obtener_receta(token, resultado, id_usuario= id_usuario)
         result = {
         "receta": query['receta'],
         "ingredientes": query['ingredientes'],
         "calorias": query['calorias'],
         "instrucciones": query['instrucciones'],
-        "type": predicted_label
+
+        "type": predicted_label,
+        "id_usuario": id_usuario
     }
     elif predicted_label == "solicitud_menu":
         # Aquí usamos la función extraer_tiempo
         dias = extraer_tiempo(prompt)
-        query = generar_menu(token, resultado, dias)
+        query = generar_menu(token, resultado, dias, id_usuario)
         query = json.loads(query)
         result = {
             "recetas": query['recipes'],
             "total_calorias": query['total_calories'],
             # "instrucciones": query['instrucciones'],
             "type": predicted_label,
-            "time": dias
+            "time": dias,
+            "id_usuario": id_usuario
         }
     elif predicted_label == "pregunta_cocina":
         
@@ -293,6 +299,7 @@ def clasificador_pregunta(prompt: str):
                 "query": prompt,
                 "response": "Hubo un error al intentar comunicarse con el servidor de RTX",
                 "type": predicted_label,
+                "id_usuario": id_usuario
                     }
         translated_response = translate_text_from_to(response, source_lang="EN", target_lang="ES")
         #responder
@@ -300,6 +307,7 @@ def clasificador_pregunta(prompt: str):
         "query": prompt,
         "response": translated_response,
         "type": predicted_label,
+        "id_usuario": id_usuario
     }
     else:
         result = {
