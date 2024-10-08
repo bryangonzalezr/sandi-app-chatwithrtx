@@ -293,10 +293,15 @@ def clasificador_pregunta(prompt: str, id_usuario: int):
         query = obtener_receta(token, resultado, id_usuario= id_usuario)
         result = {
         "receta": query['receta'],
+        "dietas": query['dietas'],
+        "salud": query["salud"],
+        "precauciones": query["precauciones"],
         "ingredientes": query['ingredientes'],
         "calorias": query['calorias'],
+        "tiempoTotal": query["tiempoTotal"],
+        "tipo_comida": query["tipo_comida"],
+        "tipo_plato": query["tipo_plato"],
         "instrucciones": query['instrucciones'],
-
         "type": predicted_label,
         "id_usuario": id_usuario
     }
