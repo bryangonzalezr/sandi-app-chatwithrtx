@@ -206,16 +206,16 @@ def generar_menu(token, query, time, id_usuario):
             
             # Agregar la receta traducida con calorías sin traducir
             receta_traducida = {
-                "receta": label_traducido,
-                "dietas": diet_labels_translated,
-                "salud": health_labels_translated,
-                "precauciones":  cautions_translated,
-                "ingredientes": ingredient_lines_traducido,
-                "calorias": receta["calories"],
-                "tiempoTotal": receta["totalTime"],
-                "tipo_comida": meal_type_translated,
-                "tipo_plato": dish_type_translated, 
-                "instrucciones": instrucciones_traducidas
+                "label": label_traducido,
+                "dietLabels": diet_labels_translated,
+                "healthLabels": health_labels_translated,
+                "cautions":  cautions_translated,
+                "ingredientLines": ingredient_lines_traducido,
+                "calories": receta["calories"],
+                "totalTime": receta["totalTime"],
+                "mealType": meal_type_translated,
+                "dishType": dish_type_translated, 
+                "instructions": instrucciones_traducidas
             }
             
             recetas_traducidas.append(receta_traducida)
@@ -292,18 +292,18 @@ def clasificador_pregunta(prompt: str, id_usuario: int):
     if predicted_label == "solicitud_receta":
         query = obtener_receta(token, resultado, id_usuario= id_usuario)
         result = {
-        "receta": query['receta'],
-        "dietas": query['dietas'],
-        "salud": query["salud"],
-        "precauciones": query["precauciones"],
-        "ingredientes": query['ingredientes'],
-        "calorias": query['calorias'],
-        "tiempoTotal": query["tiempoTotal"],
-        "tipo_comida": query["tipo_comida"],
-        "tipo_plato": query["tipo_plato"],
-        "instrucciones": query['instrucciones'],
+        "label": query['receta'],
+        "dietLabels": query['dietas'],
+        "healthLabels": query["salud"],
+        "cautions": query["precauciones"],
+        "ingredientLines": query['ingredientes'],
+        "calories": query['calorias'],
+        "totalTime": query["tiempoTotal"],
+        "mealType": query["tipo_comida"],
+        "dishType": query["tipo_plato"],
+        "instructions": query['instrucciones'],
         "type": predicted_label,
-        "id_usuario": id_usuario
+        "user_id": id_usuario
     }
     elif predicted_label == "solicitud_menu":
         # Aquí usamos la función extraer_tiempo
@@ -311,12 +311,12 @@ def clasificador_pregunta(prompt: str, id_usuario: int):
         query = generar_menu(token, resultado, dias, id_usuario)
         query = json.loads(query)
         result = {
-            "recetas": query['recipes'],
-            "total_calorias": query['total_calories'],
+            "recipes": query['recipes'],
+            "total_calories": query['total_calories'],
             # "instrucciones": query['instrucciones'],
             "type": predicted_label,
             "time": dias,
-            "id_usuario": id_usuario
+            "user_id": id_usuario
         }
     elif predicted_label == "pregunta_cocina":
         
