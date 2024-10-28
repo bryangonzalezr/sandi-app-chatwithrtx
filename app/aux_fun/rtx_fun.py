@@ -52,20 +52,25 @@ def join_queue(session_hash, fn_index, port, chatdata):
 
 def listen_for_updates(session_hash, port):
     HOST = Config.get_ngrok_url()
-
     url = f"http://{HOST}/queue/data?session_hash={session_hash}"
-
     response = requests.get(url, stream=True)
+
     for line in response.iter_lines():
         if line:
             try:
-                data = json.loads(line[5:])
+                # Verifica el contenido de la línea antes de procesarla
+                # print("Line received:", line.decode("utf-8"))
+                
+                data = json.loads(line[5:])  # Ajusta si es necesario
                 if data['msg'] == 'process_completed':
                     message = data['output']['data'][0][0][1]
                     clean_message = re.sub(r'<br>Reference files:<br>.*', '', message)
+                    
+                    # Verifica el mensaje limpio antes de retornarlo
+                    # print("Clean message:", clean_message)
                     return clean_message
             except Exception as e:
-                pass
+                print(f"Error parsing line: {e}")
 
 def send_message(message):
     if not port:
@@ -74,7 +79,10 @@ def send_message(message):
         raise Exception("Failed to find a server port for 'Chat with RTX'. Ensure the server is running.")
 
     session_hash = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-    #add chat history here -v
     chatdata = [[[message, None]], None]
     join_queue(session_hash, 34, port, chatdata)
-    return listen_for_updates(session_hash, port)
+    
+    # Verifica la respuesta de `listen_for_updates`
+    result = listen_for_updates(session_hash, port)
+    # print("Final result from send_message:", result)
+    return result
