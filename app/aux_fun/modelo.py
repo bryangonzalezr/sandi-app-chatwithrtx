@@ -111,21 +111,29 @@ def obtener_receta(token, query):
         healthLabels = recipe.get("healthLabels", [])
         cautions = recipe.get("cautions", [])
         ingredient_lines = recipe.get("ingredientLines", [])
-        ingredients = [ingredient.get("food") for ingredient in recipe.get("ingredients", [])]
-        calories = recipe.get("calories", 0)
+        
+        # Extraer y traducir ingredientes con cantidad
+        ingredients = [
+            {
+                "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
+                "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+            }
+            for ingredient in recipe.get("ingredients", [])
+        ]
+        
+        calories = recipe.get("calories", 0) 
         totalTime = recipe.get("totalTime", 0)
         mealType = recipe.get("mealType", [])
         dishType = recipe.get("dishType", [])
         ingredientes = ", ".join(ingredient_lines)
         instrucciones = send_message(f"Give me instructions for {label} using the following ingredients: {ingredientes}")
 
-        # Traducir los campos
+        # Traducir los campos restantes
         label_translated = translate_text_from_to(label, source_lang="EN", target_lang="ES")
         diet_labels_translated = [translate_text_from_to(label, source_lang="EN", target_lang="ES") for label in dietLabels]
         health_labels_translated = [translate_text_from_to(label, source_lang="EN", target_lang="ES") for label in healthLabels]
         cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in cautions]
         ingredient_lines_translated = [translate_text_from_to(line, source_lang="EN", target_lang="ES") for line in ingredient_lines]
-        ingredient_translated = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in ingredients]
         meal_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in mealType]
         dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in dishType]
         instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
@@ -135,9 +143,9 @@ def obtener_receta(token, query):
             "receta": label_translated,
             "dietas": diet_labels_translated,
             "salud": health_labels_translated,
-            "precauciones":  cautions_translated,
+            "precauciones": cautions_translated,
             "ingredientes": ingredient_lines_translated,
-            "nombre_ingredientes": ingredient_translated,
+            "nombre_ingredientes": ingredients,
             "calorias": calories,
             "tiempoTotal": totalTime,
             "tipo_comida": meal_type_translated,
@@ -202,7 +210,14 @@ def generar_menu(token, query, time):
             for receta in menus:
                 ingredientes = ", ".join(receta["ingredientLines"])
                 instrucciones = send_message(f"Give me instructions for {receta['label']} using the following ingredients: {ingredientes}")
-                ingredients = [ingredient.get("food") for ingredient in receta.get("ingredients", [])]
+                # Extraer y traducir ingredientes con cantidad
+                ingredients = [
+                    {
+                        "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
+                        "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+                    }
+                    for ingredient in receta.get("ingredients", [])
+                ]
 
                 # Traducir label, ingredientLines y mealType
                 label_traducido = translate_text_from_to(receta["label"], source_lang="EN", target_lang="ES")
@@ -210,7 +225,6 @@ def generar_menu(token, query, time):
                 health_labels_translated = [translate_text_from_to(label, source_lang="EN", target_lang="ES") for label in receta["healthLabels"]]
                 cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in receta["cautions"]]
                 ingredient_lines_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in receta["ingredientLines"]]
-                ingredients_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in ingredients]
                 meal_type_translated = [translate_text_from_to(meal, source_lang="EN", target_lang="ES") for meal in receta["mealType"]]
                 dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]]
                 instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
@@ -222,7 +236,7 @@ def generar_menu(token, query, time):
                     "healthLabels": health_labels_translated,
                     "cautions": cautions_translated,
                     "ingredientLines": ingredient_lines_traducido,
-                    "ingredients": ingredients_traducido,
+                    "ingredients": ingredients,
                     "calories": receta["calories"],
                     "totalTime": receta["totalTime"],
                     "mealType": meal_type_translated,
@@ -241,8 +255,16 @@ def generar_menu(token, query, time):
                 for receta in recipes:
                     ingredientes = ", ".join(receta["ingredientLines"])
                     instrucciones = send_message(f"Give me instructions for {receta['label']} using the following ingredients: {ingredientes}")
-                    ingredients = [ingredient.get("food") for ingredient in receta.get("ingredients", [])]
-                    print(receta["dishType"])
+                    # Extraer y traducir ingredientes con cantidad
+                    ingredients = [
+                        {
+                            "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
+                            "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+                        }
+                        for ingredient in receta.get("ingredients", [])
+                    ]
+                    print(instrucciones)
+                    print(ingredients)
 
                     # Traducir label, ingredientLines y mealType
                     label_traducido = translate_text_from_to(receta["label"], source_lang="EN", target_lang="ES")
@@ -250,7 +272,6 @@ def generar_menu(token, query, time):
                     health_labels_translated = [translate_text_from_to(label, source_lang="EN", target_lang="ES") for label in receta["healthLabels"]]
                     cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in receta["cautions"]]
                     ingredient_lines_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in receta["ingredientLines"]]
-                    ingredients_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in ingredients]
                     meal_type_translated = [translate_text_from_to(meal, source_lang="EN", target_lang="ES") for meal in receta["mealType"]]
                     dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]]
                     instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
@@ -262,7 +283,7 @@ def generar_menu(token, query, time):
                         "healthLabels": health_labels_translated,
                         "cautions": cautions_translated,
                         "ingredientLines": ingredient_lines_traducido,
-                        "ingredients": ingredients_traducido,
+                        "ingredients": ingredients,
                         "calories": receta["calories"],
                         "totalTime": receta["totalTime"],
                         "mealType": meal_type_translated,
