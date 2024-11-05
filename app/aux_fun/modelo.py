@@ -116,7 +116,8 @@ def obtener_receta(token, query):
         ingredients = [
             {
                 "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
-                "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+                "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
+                "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
             }
             for ingredient in recipe.get("ingredients", [])
         ]
@@ -214,7 +215,8 @@ def generar_menu(token, query, time):
                 ingredients = [
                     {
                         "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
-                        "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+                        "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
+                        "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
                     }
                     for ingredient in receta.get("ingredients", [])
                 ]
@@ -259,7 +261,8 @@ def generar_menu(token, query, time):
                     ingredients = [
                         {
                             "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
-                            "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None
+                            "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
+                            "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
                         }
                         for ingredient in receta.get("ingredients", [])
                     ]
