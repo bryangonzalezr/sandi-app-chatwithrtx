@@ -89,15 +89,27 @@ def extraer_tiempo(prompt):
 #         print(f"Error al obtener el token: {e}")
 #         return None
     
-def obtener_receta(token, query):
+def obtener_receta(token, query, restrictions):
     url = "http://"+api_url+":"+api_port+"/api/receta/generar"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    body = {
-        "query": query
-    }
+
+    if restrictions != "" and query != "":
+        body = {
+            "query": query,
+            "excluded": restrictions
+        }
+    elif restrictions != "" and query == "":
+        body = {
+            "excluded": restrictions
+        }
+    else:
+        body = {
+            "query": query
+        }
+    print(body)
 
     try:
         response = requests.post(url, headers=headers, json=body)
@@ -117,10 +129,11 @@ def obtener_receta(token, query):
             {
                 "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
                 "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
-                "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
+                "measure": "" if ingredient.get("measure") is None else translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
             }
             for ingredient in recipe.get("ingredients", [])
         ]
+        print(ingredients)
         
         calories = recipe.get("calories", 0) 
         totalTime = recipe.get("totalTime", 0)
@@ -128,6 +141,7 @@ def obtener_receta(token, query):
         dishType = recipe.get("dishType", [])
         ingredientes = ", ".join(ingredient_lines)
         instrucciones = send_message(f"Give me instructions for {label} using the following ingredients: {ingredientes}")
+        print(instrucciones)
 
         # Traducir los campos restantes
         label_translated = translate_text_from_to(label, source_lang="EN", target_lang="ES")
@@ -136,7 +150,7 @@ def obtener_receta(token, query):
         cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in cautions]
         ingredient_lines_translated = [translate_text_from_to(line, source_lang="EN", target_lang="ES") for line in ingredient_lines]
         meal_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in mealType]
-        dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in dishType]
+        dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in dishType] if dishType else []
         instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
         
         # Crear el JSON final con las traducciones
@@ -160,19 +174,41 @@ def obtener_receta(token, query):
         print(f"Error al obtener la receta: {e}")
         return None
     
-def generar_menu(token, query, time):
-    body = {
-        "query": query,
-        "timespan": str(time)
-    }
+def generar_menu(token, query, time, restrictions):
+    if restrictions != "" and query != "":
+        body = {
+            "query": query,
+            "excluded": restrictions,
+            "timespan": str(time)
+        }
+    elif restrictions != "" and query == "":
+        body = {
+            "excluded": restrictions,
+            "timespan": str(time)
+        }
+    else:
+        body = {
+            "query": query,
+            "timespan": str(time)
+        }
 
     # Verificamos si el valor de time es 1, 7 o 30 para definir el tipo de menú
     if time == 1:
         url = "http://"+api_url+":"+api_port+"/api/menu-diario/generar"
         menu_type = "diario"
-        body = {
-            "query": query
-        }
+        if restrictions != "" and query != "":
+            body = {
+                "query": query,
+                "excluded": restrictions
+            }
+        elif restrictions != "" and query == "":
+            body = {
+                "excluded": restrictions
+            }
+        else:
+            body = {
+                "query": query
+            }
     elif time == 7:
         url = "http://"+api_url+":"+api_port+"/api/menu/generar"
         menu_type = "semanal"
@@ -187,6 +223,7 @@ def generar_menu(token, query, time):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
+    print(body)
 
     try:
         # Hacer la solicitud al endpoint
@@ -216,7 +253,7 @@ def generar_menu(token, query, time):
                     {
                         "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
                         "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
-                        "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
+                        "measure": "" if ingredient.get("measure") is None else translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
                     }
                     for ingredient in receta.get("ingredients", [])
                 ]
@@ -228,7 +265,7 @@ def generar_menu(token, query, time):
                 cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in receta["cautions"]]
                 ingredient_lines_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in receta["ingredientLines"]]
                 meal_type_translated = [translate_text_from_to(meal, source_lang="EN", target_lang="ES") for meal in receta["mealType"]]
-                dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]]
+                dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]] if receta["dishType"] else []
                 instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
 
                 # Agregar la receta traducida
@@ -262,12 +299,10 @@ def generar_menu(token, query, time):
                         {
                             "food": translate_text_from_to(ingredient.get("food"), source_lang="EN", target_lang="ES"),
                             "quantity": float(ingredient.get("quantity")) if ingredient.get("quantity") is not None else None,
-                            "measure": translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
+                            "measure": "" if ingredient.get("measure") is None else translate_text_from_to(ingredient.get("measure"), source_lang="EN", target_lang="ES")
                         }
                         for ingredient in receta.get("ingredients", [])
                     ]
-                    print(instrucciones)
-                    print(ingredients)
 
                     # Traducir label, ingredientLines y mealType
                     label_traducido = translate_text_from_to(receta["label"], source_lang="EN", target_lang="ES")
@@ -276,7 +311,7 @@ def generar_menu(token, query, time):
                     cautions_translated = [translate_text_from_to(caution, source_lang="EN", target_lang="ES") for caution in receta["cautions"]]
                     ingredient_lines_traducido = [translate_text_from_to(ingredient, source_lang="EN", target_lang="ES") for ingredient in receta["ingredientLines"]]
                     meal_type_translated = [translate_text_from_to(meal, source_lang="EN", target_lang="ES") for meal in receta["mealType"]]
-                    dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]]
+                    dish_type_translated = [translate_text_from_to(type, source_lang="EN", target_lang="ES") for type in receta["dishType"]] if receta["dishType"] else []
                     instrucciones_traducidas = translate_text_from_to(instrucciones, source_lang="EN", target_lang="ES")
 
                     # Agregar la receta traducida
@@ -363,14 +398,31 @@ def clasificador_pregunta(prompt: str, token: str):
     }
     predicted_label = label_map_inverse[predicted_class]
 
+    restricciones_detectadas = ""
     if predicted_label == "solicitud_receta" or predicted_label == "solicitud_menu":
-        ingredientes_detectados = identificar_ingredientes(prompt)
-        recetas_detectadas = identificar_recetas(prompt)
-        resultado = texto_query(ingredientes_detectados, recetas_detectadas)
-        resultado = translate_text_from_to(resultado, source_lang="ES", target_lang="EN-US")
+        if " sin " in prompt:
+            partes = prompt.split(" sin ", 1)
+            resto = partes[0].strip()
+            restriccion = partes[1].strip()
+            
+            restricciones_detectadas = translate_text_from_to(identificar_ingredientes(restriccion), source_lang="ES", target_lang="EN-US")
+            restricciones_detectadas = [ing.strip() for ing in restricciones_detectadas.split(",")]
+            ingredientes_detectados = identificar_ingredientes(resto)
+            recetas_detectadas = identificar_recetas(resto)
+
+            if ingredientes_detectados == "" and recetas_detectadas == "":
+                resultado = ""
+            else:
+                resultado = texto_query(ingredientes_detectados, recetas_detectadas)
+                resultado = translate_text_from_to(resultado, source_lang="ES", target_lang="EN-US")
+        else:
+            ingredientes_detectados = identificar_ingredientes(prompt)
+            recetas_detectadas = identificar_recetas(prompt)
+            resultado = texto_query(ingredientes_detectados, recetas_detectadas)
+            resultado = translate_text_from_to(resultado, source_lang="ES", target_lang="EN-US")
 
     if predicted_label == "solicitud_receta":
-        query = obtener_receta(token, resultado)
+        query = obtener_receta(token, resultado, restricciones_detectadas)
         result = {
         "label": query['receta'],
         "dietLabels": query['dietas'],
@@ -388,7 +440,7 @@ def clasificador_pregunta(prompt: str, token: str):
     elif predicted_label == "solicitud_menu":
         # Aquí usamos la función extraer_tiempo
         dias = extraer_tiempo(prompt)
-        query = generar_menu(token, resultado, dias)
+        query = generar_menu(token, resultado, dias, restricciones_detectadas)
         query = json.loads(query)
         result = {
             "menus": query['menus'],
