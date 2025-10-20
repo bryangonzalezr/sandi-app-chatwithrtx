@@ -1,0 +1,8 @@
+# Ignore pycache directory
+__pycache__/
+myenv/
+checkpoint-830/
+.env
+model/*
+app/aux_fun/data/model/best_model.zip
+best_model/

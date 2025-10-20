@@ -1,0 +1,8 @@
+python-dotenv
+uvicorn
+fastapi
+deepl
+transformers
+torch
+psutil
+gdown

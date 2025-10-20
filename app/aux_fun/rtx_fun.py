@@ -1,0 +1,88 @@
+import requests
+import random
+import string
+import psutil
+import json
+import re
+import os
+import dotenv
+from app.config import Config
+
+
+dotenv.load_dotenv()
+
+
+
+port = os.getenv("RTXPort", 0)
+
+def find_chat_with_rtx_port():
+    global port
+    HOST = Config.get_ngrok_url()
+
+    connections = psutil.net_connections(kind='inet')
+    for host in connections:
+        try:
+            if host.pid:
+                process = psutil.Process(host.pid)
+                if "ChatWithRTX" in process.exe():
+                    test_port = host.laddr.port
+                    url = f"http://{HOST}:{test_port}/queue/join"
+                    response = requests.post(url, data="", timeout=0.05)
+                    if response.status_code == 422:
+                        port = test_port
+                        return
+        except:
+            pass
+
+def join_queue(session_hash, fn_index, port, chatdata):
+    #fn_indexes are some gradio generated indexes from rag/trt/ui/user_interface.py
+    HOST = Config.get_ngrok_url()
+
+    python_object = {
+        "data": chatdata,
+        "event_data": None,
+        "fn_index": fn_index,
+        "session_hash": session_hash
+    }
+    json_string = json.dumps(python_object)
+
+    url = f"http://{HOST}/queue/join"
+    response = requests.post(url, data=json_string)
+    # print("Join Queue Response:", response.json())
+
+def listen_for_updates(session_hash, port):
+    HOST = Config.get_ngrok_url()
+    url = f"http://{HOST}/queue/data?session_hash={session_hash}"
+    response = requests.get(url, stream=True)
+
+    for line in response.iter_lines():
+        if line:
+            try:
+                # Verifica el contenido de la línea antes de procesarla
+                # print("Line received:", line.decode("utf-8"))
+                
+                data = json.loads(line[5:])  # Ajusta si es necesario
+                if data['msg'] == 'process_completed':
+                    message = data['output']['data'][0][0][1]
+                    clean_message = re.sub(r'<br>Reference files:<br>.*', '', message)
+                    
+                    # Verifica el mensaje limpio antes de retornarlo
+                    # print("Clean message:", clean_message)
+                    return clean_message
+            except Exception as e:
+                print(f"Error parsing line: {e}")
+
+def send_message(message):
+    if not port:
+        find_chat_with_rtx_port()
+    if not port:
+        raise Exception("Failed to find a server port for 'Chat with RTX'. Ensure the server is running.")
+
+    session_hash = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+    chatdata = [[[message, None]], None]
+    join_queue(session_hash, 34, port, chatdata)
+    
+    # Verifica la respuesta de `listen_for_updates`
+    result = listen_for_updates(session_hash, port)
+    # print("Final result from send_message:", result)
+    return result
